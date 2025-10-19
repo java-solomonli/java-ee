@@ -2,7 +2,6 @@ package com.javasl.javaee;
 
 import com.javasl.javaee.json.PersonDto;
 import com.javasl.javaee.service.PersonService;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -14,8 +13,10 @@ import java.util.Arrays;
 import java.util.List;
 
 @ApplicationScoped
-@Path("/persons")
-public class PersonsCtrl {
+@Path("v2/persons")
+public class Persons2Ctrl {
+  @Inject
+  private PersonService personService;
 
   @Path("/text")
   @GET
@@ -38,6 +39,23 @@ public class PersonsCtrl {
     return Arrays.asList(
         new PersonDto("Daniel Joshua", "Solomon"),
         new PersonDto("Hans", "Wurst"));
+  }
+
+  @POST
+  @Produces("text/plain")
+  public Integer insertPerson(PersonDto person) {
+    var id = personService.insert(person);
+    return id;
+  }
+
+  @Path("/{id}")
+  @GET
+  @Produces("application/json")
+  public PersonDto getPerson(@PathParam("id") Integer id) {
+    var personEntity = personService.findById(id);
+    var entityToMap = personEntity.orElse(new com.javasl.javaee.service.Person());
+
+    return new PersonDto(entityToMap.getGivennames(), entityToMap.getSurname());
   }
 
   @Path("/xml")

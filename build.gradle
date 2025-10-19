@@ -11,11 +11,13 @@ repositories {
 }
 
 ext {
-    junitVersion = '5.13.2'
+    junitVersion = '5.10.0'
 }
 
-sourceCompatibility = '21'
-targetCompatibility = '21'
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -26,10 +28,77 @@ dependencies {
     implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.4")
     implementation("org.glassfish.jaxb:jaxb-runtime:4.0.6")
 
+    implementation("org.hibernate.orm:hibernate-core:7.1.4.Final")
+    implementation("com.h2database:h2:2.4.240")
+
+    /**
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testImplementation("org.jboss.arquillian.junit5:arquillian-junit5-container:1.10.0.Final")
+    // 👇 Needed for jakarta.ws.rs.core.Application and REST Client
+    testImplementation 'jakarta.ws.rs:jakarta.ws.rs-api:3.1.0'
+    testImplementation("io.rest-assured:rest-assured:5.5.6") {
+        exclude group: "junit", module: "junit"
+    }
+    testImplementation("org.mockito:mockito-core:5.20.0")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.0")
+    unitTestImplementation("org.jboss.arquillian.container:arquillian-weld-embedded:4.0.0.Final")
+
+    // Wildfly on localhost for integration tests
+    integrationTestImplementation("org.wildfly.arquillian:wildfly-arquillian-container-remote:5.1.0.Final")
+ */
 }
 
-test {
-    useJUnitPlatform()
+testing {
+    suites {
+        // ---- Default suite: standard Weld-embedded "unit" tests ----
+        test {
+            useJUnitJupiter()
+
+            dependencies {
+                implementation 'org.jboss.arquillian.junit5:arquillian-junit5-container:1.10.0.Final'
+                implementation 'org.jboss.arquillian.container:arquillian-weld-embedded:4.0.0.Final'
+                // Jakarta REST API (needed when using @Path, @GET, etc. in embedded)
+                implementation 'jakarta.ws.rs:jakarta.ws.rs-api:4.0.0'
+                implementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+                runtimeOnly  "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+            }
+        }
+
+        // ---- Additional suite: remote WildFly integration tests ----
+        integrationTest(JvmTestSuite) {
+            useJUnitJupiter()
+
+            dependencies {
+                implementation project()
+                implementation 'org.jboss.arquillian.junit5:arquillian-junit5-container:1.10.0.Final'
+
+                // Jakarta REST API (needed when using @Path, @GET, etc. in embedded)
+                implementation 'jakarta.ws.rs:jakarta.ws.rs-api:4.0.0'
+                implementation 'org.jboss.weld.se:weld-se-core:5.1.0.Final'
+                implementation 'io.rest-assured:rest-assured:5.5.0'
+                runtimeOnly  "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+
+                //implementation 'org.wildfly.arquillian:wildfly-arquillian-container-remote:5.1.0.Final'
+                implementation("org.wildfly.arquillian:wildfly-arquillian-container-managed:5.1.0.Final")
+            }
+
+            targets {
+                all {
+                    testTask.configure {
+                        description = "Runs WildFly remote integration tests"
+                        group = "verification"
+                        useJUnitPlatform()
+                        testLogging {
+                            events "passed", "skipped", "failed"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn(testing.suites.integrationTest)
 }
