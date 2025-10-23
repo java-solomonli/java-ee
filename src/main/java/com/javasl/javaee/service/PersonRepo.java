@@ -8,7 +8,7 @@ import jakarta.data.repository.Save;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+//@Repository Not suppported yet
 public interface PersonRepo {
   @Save
   void save(Person person);

@@ -25,9 +25,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(ArquillianExtension.class)
+//@ExtendWith(ArquillianExtension.class)
 public class PersonRepoCtrlIntTest {
-  @ArquillianResource
+/**  @ArquillianResource
   URL baseUrl;
 
   @BeforeAll
@@ -142,5 +142,5 @@ public class PersonRepoCtrlIntTest {
     Assertions.assertEquals("Daniel Joshua", person.getGivenNames());
     Assertions.assertEquals("Solomon", person.getSurname());
   }
-
+ */
 }

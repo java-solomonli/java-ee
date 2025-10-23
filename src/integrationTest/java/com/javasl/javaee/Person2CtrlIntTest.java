@@ -12,6 +12,7 @@ import com.javasl.javaee.service.IllegalArgumentExceptionMapper;
 import com.javasl.javaee.service.Person;
 import com.javasl.javaee.service.PersonService;
 import io.restassured.RestAssured;
+import io.restassured.common.mapper.TypeRef;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.http.ContentType;
@@ -19,6 +20,7 @@ import io.restassured.path.json.mapper.factory.JsonbObjectMapperFactory;
 import jakarta.inject.Inject;
 import java.net.URL;
 
+import java.util.List;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit5.ArquillianExtension;
@@ -130,24 +132,21 @@ public class Person2CtrlIntTest {
     Assertions.assertNotNull(created);
     Assertions.assertNotNull(created.getId());
 
-    URL getEndpoint = new URL(baseUrl, "api/v2/persons/" + created.getId());
-    PersonDto person = RestAssured
+    URL getEndpoint = new URL(baseUrl, "api/v2/persons");
+    List<PersonDto> persons = RestAssured
         .given()
         .baseUri(getEndpoint.toExternalForm())
         .accept(ContentType.JSON)
         .get()
         .then()
         .statusCode(200)
-        .body("givenNames", equalTo("Daniel Joshua"))
-        .body("surname", equalTo("Solomon"))
-        .body("id", equalTo(created.getId()))
         .extract()
-        .as(PersonDto.class);
-    Assertions.assertNotNull(person);
-    Assertions.assertNotNull(person.getId());
-    Assertions.assertEquals(created.getId(), person.getId());
-    Assertions.assertEquals("Daniel Joshua", person.getGivenNames());
-    Assertions.assertEquals("Solomon", person.getSurname());
+        .as(new TypeRef<List<PersonDto>>() {});
+    Assertions.assertNotNull(persons);
+    Assertions.assertFalse(persons.isEmpty());
+    Assertions.assertEquals(created.getId(), persons.get(0).getId());
+    Assertions.assertEquals("Daniel Joshua", persons.get(0).getGivenNames());
+    Assertions.assertEquals("Solomon", persons.get(0).getSurname());
   }
 
   @Test

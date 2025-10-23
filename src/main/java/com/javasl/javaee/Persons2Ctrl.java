@@ -43,17 +43,20 @@ public class Persons2Ctrl {
   @GET
   @Produces("application/json")
   public List<PersonDto> getPersons() {
-    return Arrays.asList(
-        new PersonDto("Daniel Joshua", "Solomon"),
-        new PersonDto("Hans", "Wurst"));
+    log.info("getPersons, get every record");
+    var persons = personService.findAll();
+    log.info("getPersons: {}", persons);
+    return persons;
   }
 
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public PersonDto insertPerson(PersonDto person) {
+    log.info("insertPerson: {}", person);
     var personEntity = personService.insert(person);
-    return mapTo(personEntity);
+    log.info("insertPerson: {}", personEntity);
+    return personEntity;
   }
 
   @Path("/{id}")
@@ -61,8 +64,9 @@ public class Persons2Ctrl {
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   public PersonDto editPerson(PersonDto person) {
+    log.info("editPerson: {}", person);
     var personEntity = personService.edit(person);
-    return mapTo(personEntity);
+    return personEntity;
   }
 
   @Path("/{id}")
@@ -70,14 +74,9 @@ public class Persons2Ctrl {
   @Produces(MediaType.APPLICATION_JSON)
   public PersonDto getPerson(@PathParam("id") Integer id) {
     log.info("getPerson: {}", id);
-    var personEntity = personService.findById(id);
-    log.info("getPerson: {}", personEntity);
-    return mapTo(personEntity);
+    var person = personService.findById(id);
+    log.info("getPerson: {}", person);
+    return person;
   }
-
-  private PersonDto mapTo(com.javasl.javaee.service.Person person) {
-    return new PersonDto(person.getId(), person.getGivennames(), person.getSurname());
-  }
-
 
 }
